@@ -15,3 +15,17 @@ Designed for systems like:
 - Ollama
 - OpenAI-compatible APIs
 
+## Quick Start
+
+Install:
+
+go install github.com/JanFalkin/llmbench@latest
+
+Run a benchmark:
+
+llmbench benchmark \
+  --url http://localhost:8000/v1/chat/completions \
+  --model llama3 \
+  --prompt-tokens 512 \
+  --completion-tokens 128 \
+  --concurrency 16
