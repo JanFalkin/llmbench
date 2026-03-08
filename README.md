@@ -19,19 +19,24 @@ Designed for systems like:
 
 Install:
 
+```bash
 go install github.com/JanFalkin/llmbench@latest
+```
 
 Run a benchmark:
 
+```bash
 llmbench benchmark \
   --url http://localhost:8000/v1/chat/completions \
   --model llama3 \
   --prompt-tokens 512 \
   --completion-tokens 128 \
   --concurrency 16
+```
 
 Example output:
 
+```text
 Model: llama3
 Concurrency: 16
 
@@ -41,3 +46,4 @@ Output tokens/sec:  1045
 TTFT p50/p95:       182ms / 391ms
 Inter-token p50/p95: 19ms / 44ms
 Latency p50/p95:    1.24s / 2.06s
+```
