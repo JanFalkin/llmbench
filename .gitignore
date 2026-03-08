@@ -1,0 +1,19 @@
+# binaries
+/bin/
+/dist/
+
+# build artifacts
+*.exe
+*.test
+*.out
+
+# Go workspace
+go.work
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
