@@ -18,9 +18,11 @@ func runBenchmark(args []string) {
 	fs := flag.NewFlagSet("benchmark", flag.ExitOnError)
 
 	var cfg config.BenchmarkConfig
+	var format string
+	fs.StringVar(&format, "format", "table", "Output format: table or json")
 	fs.StringVar(&cfg.URL, "url", "http://localhost:11434", "Base URL of OpenAI-compatible endpoint")
 	fs.StringVar(&cfg.Model, "model", "", "Model name")
-	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY env var)")
+	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY or OPENAI_API_KEY env var)")
 	fs.IntVar(&cfg.PromptTokens, "prompt-tokens", 512, "Approximate prompt token count")
 	fs.IntVar(&cfg.CompletionTokens, "completion-tokens", 128, "Max completion tokens")
 	fs.IntVar(&cfg.Concurrency, "concurrency", 1, "Number of concurrent workers")
@@ -33,6 +35,10 @@ func runBenchmark(args []string) {
 
 	if cfg.APIKey == "" {
 		cfg.APIKey = os.Getenv("LLMBENCH_API_KEY")
+	}
+
+	if cfg.APIKey == "" {
+		cfg.APIKey = os.Getenv("OPENAI_API_KEY")
 	}
 
 	if cfg.Model == "" {
@@ -49,6 +55,18 @@ func runBenchmark(args []string) {
 		fmt.Fprintln(os.Stderr, "benchmark failed:", err)
 		os.Exit(1)
 	}
-
-	fmt.Print(report.RenderTable(*rep))
+	switch format {
+	case "json":
+		data, err := report.RenderBenchmarkJSON(*rep)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "render json failed:", err)
+			os.Exit(1)
+		}
+		fmt.Println(string(data))
+	case "table":
+		fmt.Print(report.RenderTable(*rep))
+	default:
+		fmt.Fprintf(os.Stderr, "error: unsupported format %q (expected \"table\" or \"json\")\n", format)
+		os.Exit(1)
+	}
 }
