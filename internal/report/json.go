@@ -74,7 +74,7 @@ type JSONSweepReport struct {
 	Version           string         `json:"version"`
 	Kind              string         `json:"kind"`
 	Timestamp         time.Time      `json:"timestamp"`
-	BaseConfig        JSONConfig     `json:"base_config"`
+	BaseConfig        *JSONConfig    `json:"base_config,omitempty"`
 	ConcurrencyLevels []int          `json:"concurrency_levels"`
 	Runs              []JSONSweepRun `json:"runs"`
 }
@@ -118,11 +118,12 @@ func RenderSweepJSON(reports []stats.BenchmarkReport) ([]byte, error) {
 		})
 	}
 
+	baseCfgJSON := toJSONConfig(baseCfg)
 	doc := JSONSweepReport{
 		Version:           schemaVersion,
 		Kind:              "sweep",
 		Timestamp:         time.Now().UTC(),
-		BaseConfig:        toJSONConfig(baseCfg),
+		BaseConfig:        &baseCfgJSON,
 		ConcurrencyLevels: levels,
 		Runs:              runs,
 	}

@@ -92,7 +92,10 @@ func runSweep(args []string) {
 			os.Exit(1)
 		}
 		fmt.Println(string(data))
-	default:
+	case "table":
 		fmt.Print(report.RenderSweepTable(reports))
+	default:
+		fmt.Fprintf(os.Stderr, "error: unsupported format %q (expected \"table\" or \"json\")\n", format)
+		os.Exit(1)
 	}
 }
