@@ -18,8 +18,9 @@ func runBenchmark(args []string) {
 	fs := flag.NewFlagSet("benchmark", flag.ExitOnError)
 
 	var cfg config.BenchmarkConfig
-	fs.StringVar(&cfg.URL, "url", "http://localhost:8000", "Base URL of OpenAI-compatible endpoint")
+	fs.StringVar(&cfg.URL, "url", "http://localhost:11434", "Base URL of OpenAI-compatible endpoint")
 	fs.StringVar(&cfg.Model, "model", "", "Model name")
+	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY env var)")
 	fs.IntVar(&cfg.PromptTokens, "prompt-tokens", 512, "Approximate prompt token count")
 	fs.IntVar(&cfg.CompletionTokens, "completion-tokens", 128, "Max completion tokens")
 	fs.IntVar(&cfg.Concurrency, "concurrency", 1, "Number of concurrent workers")
@@ -30,12 +31,16 @@ func runBenchmark(args []string) {
 
 	_ = fs.Parse(args)
 
+	if cfg.APIKey == "" {
+		cfg.APIKey = os.Getenv("LLMBENCH_API_KEY")
+	}
+
 	if cfg.Model == "" {
 		fmt.Fprintln(os.Stderr, "error: --model is required")
 		os.Exit(1)
 	}
 
-	cl := client.New(cfg.URL, "", cfg.Timeout, nil)
+	cl := client.New(cfg.URL, cfg.APIKey, cfg.Timeout, nil)
 	gen := workload.NewGenerator()
 	r := runner.New(cfg, cl, gen)
 

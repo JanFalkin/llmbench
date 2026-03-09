@@ -34,6 +34,17 @@ llmbench benchmark \
   --completion-tokens 16
 ```
 
+For authenticated endpoints pass your API key via flag or environment variable:
+
+```bash
+# via flag
+llmbench benchmark --api-key sk-... --url https://api.openai.com --model gpt-4o-mini
+
+# via environment variable
+export LLMBENCH_API_KEY=sk-...
+llmbench benchmark --url https://api.openai.com --model gpt-4o-mini
+```
+
 Example output:
 
 ```text
