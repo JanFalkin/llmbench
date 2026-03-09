@@ -27,11 +27,11 @@ Run a benchmark:
 
 ```bash
 llmbench benchmark \
-  --url http://localhost:8000/v1/chat/completions \
+  --url http://localhost:11434 \
   --model llama3 \
-  --prompt-tokens 512 \
-  --completion-tokens 128 \
-  --concurrency 16
+  --requests 5 \
+  --concurrency 2 \
+  --completion-tokens 16 
 ```
 
 Example output:
