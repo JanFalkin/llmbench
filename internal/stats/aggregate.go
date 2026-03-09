@@ -37,18 +37,27 @@ type BenchmarkReport struct {
 	RequestsPerSecond  float64
 	OutputTokensPerSec float64
 	AvgLatency         time.Duration
-	Results            []RequestResult
+	LatencyP50         time.Duration
+	LatencyP95         time.Duration
+
+	TTFTP50 time.Duration
+	TTFTP95 time.Duration
+	Results []RequestResult
 }
 
 func Aggregate(cfg config.BenchmarkConfig, results []RequestResult, elapsed time.Duration) BenchmarkReport {
 	var okCount int
 	var outputTokens int
 	var totalLatency time.Duration
+	var latencies []time.Duration
+	var ttfts []time.Duration
 
 	for _, r := range results {
 		if r.Error == "" {
 			okCount++
 			totalLatency += r.EndToEnd
+			latencies = append(latencies, r.EndToEnd)
+			ttfts = append(ttfts, r.TTFT)
 		}
 		outputTokens += r.OutputTokens
 	}
@@ -74,6 +83,10 @@ func Aggregate(cfg config.BenchmarkConfig, results []RequestResult, elapsed time
 		RequestsPerSecond:  reqPerSec,
 		OutputTokensPerSec: tokPerSec,
 		AvgLatency:         avgLatency,
+		LatencyP50:         Percentile(latencies, 0.5),
+		LatencyP95:         Percentile(latencies, 0.95),
+		TTFTP50:            Percentile(ttfts, 0.5),
+		TTFTP95:            Percentile(ttfts, 0.95),
 		Results:            results,
 	}
 }

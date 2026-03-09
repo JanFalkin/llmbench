@@ -18,6 +18,12 @@ func RenderTable(rep stats.BenchmarkReport) string {
 	fmt.Fprintf(&b, "Output tokens/sec:  %.2f\n", rep.OutputTokensPerSec)
 	fmt.Fprintf(&b, "URL:                %s\n", rep.Config.URL)
 	fmt.Fprintf(&b, "Model:              %s\n", rep.Config.Model)
+	fmt.Fprintf(&b, "Prompt tokens:      %d\n", rep.Config.PromptTokens)
+	fmt.Fprintf(&b, "Completion tokens:  %d\n", rep.Config.CompletionTokens)
+	fmt.Fprintf(&b, "Concurrency:        %d\n\n", rep.Config.Concurrency)
+	fmt.Fprintf(&b, "Avg Latency:        %s\n", rep.AvgLatency)
+	fmt.Fprintf(&b, "Latency p50/p95:    %s / %s\n", rep.LatencyP50, rep.LatencyP95)
+	fmt.Fprintf(&b, "TTFT p50/p95:       %s / %s\n", rep.TTFTP50, rep.TTFTP95)
 
 	if rep.FailedRequests > 0 {
 		fmt.Fprintf(&b, "\nErrors:\n")

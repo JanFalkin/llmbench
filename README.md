@@ -40,11 +40,19 @@ Example output:
 Requests:           5
 Successful:         5
 Failed:             0
-Elapsed:            6.922719974s
-Requests/sec:       0.72
-Output tokens/sec:  11.56
+Elapsed:            13.332880403s
+Requests/sec:       0.38
+Output tokens/sec:  6.00
 URL:                http://localhost:11434
 Model:              llama3
+Prompt tokens:      512
+Completion tokens:  16
+Concurrency:        2
+
+Avg Latency:        5.070435294s
+Latency p50/p95:    2.708161626s / 7.976055943s
+TTFT p50/p95:       1.44212132s / 6.737083255s
+
 ```
 
 Run a sweep:
@@ -61,9 +69,9 @@ llmbench sweep \
 Example output:
 
 ```text
-Concurrency   Success   Req/sec   Tok/sec   Avg Latency
--------------------------------------------------------
-1             16/16     0.71      11.38     1.406416821s
-2             16/16     0.75      12.00     2.584097372s
-4             16/16     0.74      11.85     4.888931437s
+Concurrency   Success   Req/sec   Tok/sec   Lat p50       Lat p95
+-----------------------------------------------------------------
+1             16/16     0.72      11.52     1.387377436s 1.399095169s
+2             16/16     0.74      11.77     2.659929337s 2.800495294s
+4             16/16     0.70      11.21     5.614021364s 5.874859306s
 ```
