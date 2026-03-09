@@ -37,13 +37,12 @@ llmbench benchmark \
 Example output:
 
 ```text
-Model: llama3
-Concurrency: 16
-
-Requests/sec:       8.2
-Output tokens/sec:  1045
-
-TTFT p50/p95:       182ms / 391ms
-Inter-token p50/p95: 19ms / 44ms
-Latency p50/p95:    1.24s / 2.06s
+Requests:           5
+Successful:         5
+Failed:             0
+Elapsed:            6.922719974s
+Requests/sec:       0.72
+Output tokens/sec:  11.56
+URL:                http://localhost:11434
+Model:              llama3
 ```
