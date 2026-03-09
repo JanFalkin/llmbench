@@ -5,14 +5,16 @@ import (
 )
 
 type Capture struct {
-	HTTPStatus          int
-	FirstByteAt         time.Time
-	FirstTokenAt        time.Time
-	LastTokenAt         time.Time
-	UsageBlockAt        time.Time
-	OutputTokens        int
-	ChunkCount          int
-	InterTokenLatencies []time.Duration
+	HTTPStatus            int
+	FirstByteAt           time.Time
+	FirstTokenAt          time.Time
+	LastTokenAt           time.Time
+	UsageBlockAt          time.Time
+	OutputTokens          int // deterministic: UsageOutputTokens when present, else EstimatedOutputTokens
+	EstimatedOutputTokens int // counted from content-bearing chunks (one chunk ≈ one token)
+	UsageOutputTokens     int // completion_tokens from server usage block, 0 if absent
+	ChunkCount            int
+	InterTokenLatencies   []time.Duration
 }
 
 type chatCompletionChunk struct {

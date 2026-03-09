@@ -15,6 +15,7 @@ func ParseChatCompletionsStream(r io.Reader, now func() time.Time) (*Capture, er
 	cap := &Capture{}
 	var sawFirstByte bool
 	var lastTokenTime time.Time
+	var estimated int
 
 	for {
 		line, err := br.ReadString('\n')
@@ -64,7 +65,7 @@ func ParseChatCompletionsStream(r io.Reader, now func() time.Time) (*Capture, er
 		if chunk.Usage != nil {
 			cap.UsageBlockAt = ts
 			if chunk.Usage.CompletionTokens > 0 {
-				cap.OutputTokens = chunk.Usage.CompletionTokens
+				cap.UsageOutputTokens = chunk.Usage.CompletionTokens
 			}
 		}
 
@@ -81,12 +82,20 @@ func ParseChatCompletionsStream(r io.Reader, now func() time.Time) (*Capture, er
 
 			// v1 approximation: count each content-bearing chunk as one token
 			// replace later with tokenizer-aware logic if needed
-			cap.OutputTokens++
+			estimated++
 		}
 
 		if err == io.EOF {
 			break
 		}
+	}
+
+	cap.EstimatedOutputTokens = estimated
+	// Prefer server-reported usage when present; fall back to estimate.
+	if cap.UsageOutputTokens > 0 {
+		cap.OutputTokens = cap.UsageOutputTokens
+	} else {
+		cap.OutputTokens = estimated
 	}
 
 	return cap, nil

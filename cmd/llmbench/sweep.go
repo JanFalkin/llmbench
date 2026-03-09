@@ -23,6 +23,7 @@ func runSweep(args []string) {
 
 	fs.StringVar(&cfg.URL, "url", "http://localhost:11434", "Base URL of OpenAI-compatible endpoint")
 	fs.StringVar(&cfg.Model, "model", "", "Model name")
+	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY env var)")
 	fs.IntVar(&cfg.PromptTokens, "prompt-tokens", 512, "Approximate prompt token count")
 	fs.IntVar(&cfg.CompletionTokens, "completion-tokens", 128, "Max completion tokens")
 	fs.IntVar(&cfg.Requests, "requests", 1, "Number of measured requests per sweep step")
@@ -32,6 +33,10 @@ func runSweep(args []string) {
 	fs.StringVar(&concurrencyList, "concurrency", "1,2,4", "Comma-separated concurrency levels")
 
 	_ = fs.Parse(args)
+
+	if cfg.APIKey == "" {
+		cfg.APIKey = os.Getenv("LLMBENCH_API_KEY")
+	}
 
 	if cfg.Model == "" {
 		fmt.Fprintln(os.Stderr, "error: --model is required")
