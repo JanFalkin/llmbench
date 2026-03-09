@@ -31,7 +31,7 @@ llmbench benchmark \
   --model llama3 \
   --requests 5 \
   --concurrency 2 \
-  --completion-tokens 16 
+  --completion-tokens 16
 ```
 
 Example output:
@@ -45,4 +45,25 @@ Requests/sec:       0.72
 Output tokens/sec:  11.56
 URL:                http://localhost:11434
 Model:              llama3
+```
+
+Run a sweep:
+
+```bash
+llmbench sweep \
+  --url http://localhost:11434 \
+  --model llama3 \
+  --requests 16 \
+  --completion-tokens 16 \
+  --concurrency 1,2,4
+```
+
+Example output:
+
+```text
+Concurrency   Success   Req/sec   Tok/sec   Avg Latency
+-------------------------------------------------------
+1             16/16     0.71      11.38     1.406416821s
+2             16/16     0.75      12.00     2.584097372s
+4             16/16     0.74      11.85     4.888931437s
 ```
