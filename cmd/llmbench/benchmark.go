@@ -18,6 +18,8 @@ func runBenchmark(args []string) {
 	fs := flag.NewFlagSet("benchmark", flag.ExitOnError)
 
 	var cfg config.BenchmarkConfig
+	var format string
+	fs.StringVar(&format, "format", "table", "Output format: table or json")
 	fs.StringVar(&cfg.URL, "url", "http://localhost:11434", "Base URL of OpenAI-compatible endpoint")
 	fs.StringVar(&cfg.Model, "model", "", "Model name")
 	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY env var)")
@@ -35,6 +37,10 @@ func runBenchmark(args []string) {
 		cfg.APIKey = os.Getenv("LLMBENCH_API_KEY")
 	}
 
+	if cfg.APIKey == "" {
+		cfg.APIKey = os.Getenv("OPENAI_API_KEY")
+	}
+
 	if cfg.Model == "" {
 		fmt.Fprintln(os.Stderr, "error: --model is required")
 		os.Exit(1)
@@ -49,6 +55,15 @@ func runBenchmark(args []string) {
 		fmt.Fprintln(os.Stderr, "benchmark failed:", err)
 		os.Exit(1)
 	}
-
-	fmt.Print(report.RenderTable(*rep))
+	switch format {
+	case "json":
+		data, err := report.RenderBenchmarkJSON(*rep)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "render json failed:", err)
+			os.Exit(1)
+		}
+		fmt.Println(string(data))
+	default:
+		fmt.Print(report.RenderTable(*rep))
+	}
 }
