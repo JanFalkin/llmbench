@@ -145,6 +145,20 @@ Current behavior:
 - `html-report` currently supports sweep JSON input (`kind: "sweep"`).
 - If no `--output` is provided, it writes to `report.html`.
 
+Serve directly without writing an HTML file:
+
+```bash
+llmbench html-report --input sweep.json --serve --open
+```
+
+`--serve` starts a local HTTP server (default `127.0.0.1:0`) and serves the generated report from memory.
+
+You can choose a specific bind address with `--listen`, for example:
+
+```bash
+llmbench html-report --input sweep.json --serve --listen 127.0.0.1:8080
+```
+
 Recommended workflow:
 
 ```bash
@@ -157,4 +171,17 @@ llmbench sweep \
   --format json > sweep.json
 
 llmbench html-report --input sweep.json --output sweep-report.html
+```
+
+Single-step workflow without writing JSON or HTML files (bash/zsh):
+
+```bash
+llmbench html-report --serve --open \
+  --input <(llmbench sweep \
+    --url http://localhost:11434 \
+    --model llama3 \
+    --requests 16 \
+    --completion-tokens 16 \
+    --concurrency 1,2,4,8 \
+    --format json)
 ```
