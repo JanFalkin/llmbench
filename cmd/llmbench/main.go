@@ -8,7 +8,7 @@ import (
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Println("usage: llmbench <command>")
-		fmt.Println("commands: benchmark, sweep")
+		fmt.Println("commands: benchmark, sweep, html-report")
 		os.Exit(1)
 	}
 
@@ -17,6 +17,8 @@ func main() {
 		runBenchmark(os.Args[2:])
 	case "sweep":
 		runSweep(os.Args[2:])
+	case "html-report":
+		runHTMLReport(os.Args[2:])
 	default:
 		fmt.Println("unknown command:", os.Args[1])
 	}
