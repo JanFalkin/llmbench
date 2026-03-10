@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
 )
 
 type sweepHTMLData struct {
@@ -62,19 +63,50 @@ func generateSweepHTML(raw []byte, outputPath string) error {
 		ttftP50 = append(ttftP50, run.Summary.TTFTP50MS)
 	}
 
-	concurrencyJSON, _ := json.Marshal(concurrency)
-	tokPerSecJSON, _ := json.Marshal(tokPerSec)
-	avgLatencyJSON, _ := json.Marshal(avgLatency)
-	latencyP95JSON, _ := json.Marshal(latencyP95)
-	ttftP50JSON, _ := json.Marshal(ttftP50)
+	concurrencyJSON, err := json.Marshal(concurrency)
+	if err != nil {
+		return fmt.Errorf("marshal concurrency: %w", err)
+	}
+	tokPerSecJSON, err := json.Marshal(tokPerSec)
+	if err != nil {
+		return fmt.Errorf("marshal tokens per second: %w", err)
+	}
+	avgLatencyJSON, err := json.Marshal(avgLatency)
+	if err != nil {
+		return fmt.Errorf("marshal average latency: %w", err)
+	}
+	latencyP95JSON, err := json.Marshal(latencyP95)
+	if err != nil {
+		return fmt.Errorf("marshal latency p95: %w", err)
+	}
+	ttftP50JSON, err := json.Marshal(ttftP50)
+	if err != nil {
+		return fmt.Errorf("marshal ttft p50: %w", err)
+	}
+
+	var (
+		model            string
+		url              string
+		promptTokens     int
+		completionTokens int
+		requests         int
+	)
+
+	if rep.BaseConfig != nil {
+		model = rep.BaseConfig.Model
+		url = rep.BaseConfig.URL
+		promptTokens = rep.BaseConfig.PromptTokens
+		completionTokens = rep.BaseConfig.CompletionTokens
+		requests = rep.BaseConfig.Requests
+	}
 
 	data := sweepHTMLData{
 		Title:            "llmbench Sweep Report",
-		Model:            rep.BaseConfig.Model,
-		URL:              rep.BaseConfig.URL,
-		PromptTokens:     rep.BaseConfig.PromptTokens,
-		CompletionTokens: rep.BaseConfig.CompletionTokens,
-		Requests:         rep.BaseConfig.Requests,
+		Model:            model,
+		URL:              url,
+		PromptTokens:     promptTokens,
+		CompletionTokens: completionTokens,
+		Requests:         requests,
 		ConcurrencyJSON:  template.JS(concurrencyJSON),
 		TokensPerSecJSON: template.JS(tokPerSecJSON),
 		AvgLatencyJSON:   template.JS(avgLatencyJSON),
@@ -87,14 +119,27 @@ func generateSweepHTML(raw []byte, outputPath string) error {
 		return fmt.Errorf("parse template: %w", err)
 	}
 
-	f, err := os.Create(outputPath)
+	dir := filepath.Dir(outputPath)
+	tmp, err := os.CreateTemp(dir, "llmbench-report-*.html")
 	if err != nil {
-		return fmt.Errorf("create output: %w", err)
+		return fmt.Errorf("create temp output: %w", err)
 	}
-	defer f.Close()
+	tmpName := tmp.Name()
 
-	if err := tmpl.Execute(f, data); err != nil {
+	if err := tmpl.Execute(tmp, data); err != nil {
+		tmp.Close()
+		os.Remove(tmpName)
 		return fmt.Errorf("render template: %w", err)
+	}
+
+	if err := tmp.Close(); err != nil {
+		os.Remove(tmpName)
+		return fmt.Errorf("close temp output: %w", err)
+	}
+
+	if err := os.Rename(tmpName, outputPath); err != nil {
+		os.Remove(tmpName)
+		return fmt.Errorf("finalize output: %w", err)
 	}
 
 	return nil
