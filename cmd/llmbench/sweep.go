@@ -94,6 +94,13 @@ func runSweep(args []string) {
 		fmt.Println(string(data))
 	case "table":
 		fmt.Print(report.RenderSweepTable(reports))
+	case "csv":
+		data, err := report.RenderSweepCSV(reports)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "render csv failed:", err)
+			os.Exit(1)
+		}
+		fmt.Print(string(data))
 	default:
 		fmt.Fprintf(os.Stderr, "error: unsupported format %q (expected \"table\" or \"json\")\n", format)
 		os.Exit(1)
