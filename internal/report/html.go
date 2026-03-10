@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type sweepHTMLData struct {
@@ -23,30 +24,44 @@ type sweepHTMLData struct {
 }
 
 func GenerateHTMLReport(inputPath, outputPath string) error {
+	html, err := GenerateHTMLReportContent(inputPath)
+	if err != nil {
+		return err
+	}
+
+	return writeHTMLReport(outputPath, html)
+}
+
+func GenerateHTMLReportContent(inputPath string) ([]byte, error) {
 	raw, err := os.ReadFile(inputPath)
 	if err != nil {
-		return fmt.Errorf("read input: %w", err)
+		return nil, fmt.Errorf("read input: %w", err)
 	}
+
+	return renderHTMLReport(raw)
+}
+
+func renderHTMLReport(raw []byte) ([]byte, error) {
 
 	var probe struct {
 		Kind string `json:"kind"`
 	}
 	if err := json.Unmarshal(raw, &probe); err != nil {
-		return fmt.Errorf("decode report kind: %w", err)
+		return nil, fmt.Errorf("decode report kind: %w", err)
 	}
 
 	switch probe.Kind {
 	case "sweep":
-		return generateSweepHTML(raw, outputPath)
+		return generateSweepHTML(raw)
 	default:
-		return fmt.Errorf("unsupported report kind: %q", probe.Kind)
+		return nil, fmt.Errorf("unsupported report kind: %q", probe.Kind)
 	}
 }
 
-func generateSweepHTML(raw []byte, outputPath string) error {
+func generateSweepHTML(raw []byte) ([]byte, error) {
 	var rep JSONSweepReport
 	if err := json.Unmarshal(raw, &rep); err != nil {
-		return fmt.Errorf("decode sweep report: %w", err)
+		return nil, fmt.Errorf("decode sweep report: %w", err)
 	}
 
 	var concurrency []int
@@ -65,23 +80,23 @@ func generateSweepHTML(raw []byte, outputPath string) error {
 
 	concurrencyJSON, err := json.Marshal(concurrency)
 	if err != nil {
-		return fmt.Errorf("marshal concurrency: %w", err)
+		return nil, fmt.Errorf("marshal concurrency: %w", err)
 	}
 	tokPerSecJSON, err := json.Marshal(tokPerSec)
 	if err != nil {
-		return fmt.Errorf("marshal tokens per second: %w", err)
+		return nil, fmt.Errorf("marshal tokens per second: %w", err)
 	}
 	avgLatencyJSON, err := json.Marshal(avgLatency)
 	if err != nil {
-		return fmt.Errorf("marshal average latency: %w", err)
+		return nil, fmt.Errorf("marshal average latency: %w", err)
 	}
 	latencyP95JSON, err := json.Marshal(latencyP95)
 	if err != nil {
-		return fmt.Errorf("marshal latency p95: %w", err)
+		return nil, fmt.Errorf("marshal latency p95: %w", err)
 	}
 	ttftP50JSON, err := json.Marshal(ttftP50)
 	if err != nil {
-		return fmt.Errorf("marshal ttft p50: %w", err)
+		return nil, fmt.Errorf("marshal ttft p50: %w", err)
 	}
 
 	var (
@@ -116,9 +131,18 @@ func generateSweepHTML(raw []byte, outputPath string) error {
 
 	tmpl, err := template.New("report").Parse(sweepHTMLTemplate)
 	if err != nil {
-		return fmt.Errorf("parse template: %w", err)
+		return nil, fmt.Errorf("parse template: %w", err)
 	}
 
+	var b strings.Builder
+	if err := tmpl.Execute(&b, data); err != nil {
+		return nil, fmt.Errorf("render template: %w", err)
+	}
+
+	return []byte(b.String()), nil
+}
+
+func writeHTMLReport(outputPath string, html []byte) error {
 	dir := filepath.Dir(outputPath)
 	tmp, err := os.CreateTemp(dir, "llmbench-report-*.html")
 	if err != nil {
@@ -126,10 +150,10 @@ func generateSweepHTML(raw []byte, outputPath string) error {
 	}
 	tmpName := tmp.Name()
 
-	if err := tmpl.Execute(tmp, data); err != nil {
+	if _, err := tmp.Write(html); err != nil {
 		tmp.Close()
 		os.Remove(tmpName)
-		return fmt.Errorf("render template: %w", err)
+		return fmt.Errorf("write temp output: %w", err)
 	}
 
 	if err := tmp.Close(); err != nil {
