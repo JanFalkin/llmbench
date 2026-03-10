@@ -1,12 +1,12 @@
 package report
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 type sweepHTMLData struct {
@@ -64,11 +64,11 @@ func generateSweepHTML(raw []byte) ([]byte, error) {
 		return nil, fmt.Errorf("decode sweep report: %w", err)
 	}
 
-	var concurrency []int
-	var tokPerSec []float64
-	var avgLatency []int64
-	var latencyP95 []int64
-	var ttftP50 []int64
+	concurrency := make([]int, 0, len(rep.Runs))
+	tokPerSec := make([]float64, 0, len(rep.Runs))
+	avgLatency := make([]int64, 0, len(rep.Runs))
+	latencyP95 := make([]int64, 0, len(rep.Runs))
+	ttftP50 := make([]int64, 0, len(rep.Runs))
 
 	for _, run := range rep.Runs {
 		concurrency = append(concurrency, run.Concurrency)
@@ -134,12 +134,12 @@ func generateSweepHTML(raw []byte) ([]byte, error) {
 		return nil, fmt.Errorf("parse template: %w", err)
 	}
 
-	var b strings.Builder
-	if err := tmpl.Execute(&b, data); err != nil {
+	buf := bytes.Buffer{}
+	if err := tmpl.Execute(&buf, data); err != nil {
 		return nil, fmt.Errorf("render template: %w", err)
 	}
 
-	return []byte(b.String()), nil
+	return buf.Bytes(), nil
 }
 
 func writeHTMLReport(outputPath string, html []byte) error {

@@ -71,7 +71,21 @@ func serveHTMLReport(html []byte, listenAddr string, open bool) error {
 		return fmt.Errorf("listen %q: %w", listenAddr, err)
 	}
 
-	url := "http://" + ln.Addr().String()
+	var url string
+	addr := ln.Addr()
+	tcpAddr, ok := addr.(*net.TCPAddr)
+	host, port, err := net.SplitHostPort(addr.String())
+	if err != nil || !ok {
+		// Fallback to the original behavior if we cannot parse the address.
+		url = "http://" + addr.String()
+	} else {
+		// If the listener is on an unspecified address (e.g., 0.0.0.0 or ::),
+		// use localhost in the URL so it's reachable and user-friendly.
+		if tcpAddr.IP.IsUnspecified() {
+			host = "localhost"
+		}
+		url = "http://" + net.JoinHostPort(host, port)
+	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
