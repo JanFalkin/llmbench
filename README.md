@@ -87,6 +87,51 @@ Concurrency   Success   Req/sec   Tok/sec   Lat p50       Lat p95
 4             16/16     0.70      11.21     5.614021364s 5.874859306s
 ```
 
+## CSV Output
+
+Both `benchmark` and `sweep` support self-describing CSV output via `--format csv`. Every row includes `model`, `url`, and an optional `--label` so you can safely concatenate runs from multiple experiments into a single file.
+
+### benchmark CSV
+
+```bash
+llmbench benchmark \
+  --url http://localhost:11434 \
+  --model llama3 \
+  --label local-ollama \
+  --completion-tokens 16 \
+  --requests 2 \
+  --concurrency 1 \
+  --format csv > bench.csv
+```
+
+```csv
+model,url,label,request_id,success,http_status,input_tokens,output_tokens,end_to_end_ms,ttft_ms,decode_ms,error
+llama3,http://localhost:11434,local-ollama,req-1,true,200,512,16,7912,6675,1236,
+llama3,http://localhost:11434,local-ollama,req-2,true,200,512,16,1400,147,1252,
+```
+
+### sweep CSV
+
+```bash
+llmbench sweep \
+  --url http://localhost:11434 \
+  --model llama3 \
+  --label local-ollama \
+  --requests 16 \
+  --completion-tokens 16 \
+  --concurrency 1,2,4 \
+  --format csv > sweep.csv
+```
+
+```csv
+model,url,label,concurrency,total_requests,successful_requests,failed_requests,elapsed_ms,requests_per_second,output_tokens_per_second,avg_latency_ms,latency_p50_ms,latency_p95_ms,ttft_p50_ms,ttft_p95_ms
+llama3,http://localhost:11434,local-ollama,1,16,16,0,21974,0.728116,11.649852,1373,1369,1385,142,146
+llama3,http://localhost:11434,local-ollama,2,16,16,0,21121,0.757514,12.120217,2558,2633,2655,1403,1432
+llama3,http://localhost:11434,local-ollama,4,16,16,0,21898,0.730641,11.690258,4915,5284,5793,4053,4394
+```
+
+`--label` is optional. When omitted the column is present but empty, which keeps files compatible when merging runs with and without labels.
+
 ## JSON Output
 
 Both `benchmark` and `sweep` support machine-readable output via `--format json` (JSON mode).
@@ -185,3 +230,7 @@ llmbench html-report --serve --open \
     --concurrency 1,2,4,8 \
     --format json)
 ```
+
+## Example Report
+
+![Sweep Report](images/sweep.jpg)

@@ -3,6 +3,7 @@ package report
 import (
 	"bytes"
 	"encoding/csv"
+	"reflect"
 	"strconv"
 
 	"github.com/JanFalkin/llmbench/internal/stats"
@@ -13,6 +14,9 @@ func RenderSweepCSV(reports []stats.BenchmarkReport) ([]byte, error) {
 	w := csv.NewWriter(&buf)
 
 	header := []string{
+		"model",
+		"url",
+		"label",
 		"concurrency",
 		"total_requests",
 		"successful_requests",
@@ -31,7 +35,12 @@ func RenderSweepCSV(reports []stats.BenchmarkReport) ([]byte, error) {
 	}
 
 	for _, rep := range reports {
+		model, url, label := csvMetaFromConfig(rep.Config)
+
 		row := []string{
+			model,
+			url,
+			label,
 			strconv.Itoa(rep.Config.Concurrency),
 			strconv.Itoa(rep.TotalRequests),
 			strconv.Itoa(rep.SuccessfulRequests),
@@ -59,6 +68,9 @@ func RenderBenchmarkCSV(rep stats.BenchmarkReport) ([]byte, error) {
 	w := csv.NewWriter(&buf)
 
 	header := []string{
+		"model",
+		"url",
+		"label",
 		"request_id",
 		"success",
 		"http_status",
@@ -73,6 +85,8 @@ func RenderBenchmarkCSV(rep stats.BenchmarkReport) ([]byte, error) {
 		return nil, err
 	}
 
+	model, url, label := csvMetaFromConfig(rep.Config)
+
 	for _, r := range rep.Results {
 		success := "false"
 		if r.Error == "" {
@@ -80,6 +94,9 @@ func RenderBenchmarkCSV(rep stats.BenchmarkReport) ([]byte, error) {
 		}
 
 		row := []string{
+			model,
+			url,
+			label,
 			r.RequestID,
 			success,
 			strconv.Itoa(r.HTTPStatus),
@@ -97,4 +114,35 @@ func RenderBenchmarkCSV(rep stats.BenchmarkReport) ([]byte, error) {
 
 	w.Flush()
 	return buf.Bytes(), w.Error()
+}
+
+func csvMetaFromConfig(cfg any) (model, url, label string) {
+	v := reflect.ValueOf(cfg)
+	if !v.IsValid() {
+		return "", "", ""
+	}
+	if v.Kind() == reflect.Pointer {
+		if v.IsNil() {
+			return "", "", ""
+		}
+		v = v.Elem()
+	}
+	if v.Kind() != reflect.Struct {
+		return "", "", ""
+	}
+
+	model = readFirstStringField(v, "Model", "ModelName")
+	url = readFirstStringField(v, "URL", "Url", "Endpoint", "BaseURL", "BaseUrl")
+	label = readFirstStringField(v, "Label", "RunLabel")
+	return model, url, label
+}
+
+func readFirstStringField(v reflect.Value, names ...string) string {
+	for _, name := range names {
+		f := v.FieldByName(name)
+		if f.IsValid() && f.Kind() == reflect.String {
+			return f.String()
+		}
+	}
+	return ""
 }

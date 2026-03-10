@@ -26,6 +26,7 @@ func runSweep(args []string) {
 	fs.StringVar(&cfg.URL, "url", "http://localhost:11434", "Base URL of OpenAI-compatible endpoint")
 	fs.StringVar(&cfg.Model, "model", "", "Model name")
 	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY env var)")
+	fs.StringVar(&cfg.Label, "label", "", "Optional run label (written to CSV)")
 	fs.IntVar(&cfg.PromptTokens, "prompt-tokens", 512, "Approximate prompt token count")
 	fs.IntVar(&cfg.CompletionTokens, "completion-tokens", 128, "Max completion tokens")
 	fs.IntVar(&cfg.Requests, "requests", 1, "Number of measured requests per sweep step")
@@ -102,7 +103,7 @@ func runSweep(args []string) {
 		}
 		fmt.Print(string(data))
 	default:
-		fmt.Fprintf(os.Stderr, "error: unsupported format %q (expected \"table\" or \"json\")\n", format)
+		fmt.Fprintf(os.Stderr, "error: unsupported format %q (expected \"table\", \"json\" or \"csv\")\n", format)
 		os.Exit(1)
 	}
 }
