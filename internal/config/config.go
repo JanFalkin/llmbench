@@ -14,6 +14,6 @@ type BenchmarkConfig struct {
 	WarmupRequests   int
 	Stream           bool
 	Timeout          time.Duration
-	// Optional user-supplied run label (included in CSV output).
+	// Optional user-supplied run label (included in CSV output only; not included in JSON reports).
 	Label string
 }

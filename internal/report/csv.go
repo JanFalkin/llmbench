@@ -3,9 +3,9 @@ package report
 import (
 	"bytes"
 	"encoding/csv"
-	"reflect"
 	"strconv"
 
+	"github.com/JanFalkin/llmbench/internal/config"
 	"github.com/JanFalkin/llmbench/internal/stats"
 )
 
@@ -116,33 +116,6 @@ func RenderBenchmarkCSV(rep stats.BenchmarkReport) ([]byte, error) {
 	return buf.Bytes(), w.Error()
 }
 
-func csvMetaFromConfig(cfg any) (model, url, label string) {
-	v := reflect.ValueOf(cfg)
-	if !v.IsValid() {
-		return "", "", ""
-	}
-	if v.Kind() == reflect.Pointer {
-		if v.IsNil() {
-			return "", "", ""
-		}
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Struct {
-		return "", "", ""
-	}
-
-	model = readFirstStringField(v, "Model", "ModelName")
-	url = readFirstStringField(v, "URL", "Url", "Endpoint", "BaseURL", "BaseUrl")
-	label = readFirstStringField(v, "Label", "RunLabel")
-	return model, url, label
-}
-
-func readFirstStringField(v reflect.Value, names ...string) string {
-	for _, name := range names {
-		f := v.FieldByName(name)
-		if f.IsValid() && f.Kind() == reflect.String {
-			return f.String()
-		}
-	}
-	return ""
+func csvMetaFromConfig(cfg config.BenchmarkConfig) (model, url, label string) {
+	return cfg.Model, cfg.URL, cfg.Label
 }
