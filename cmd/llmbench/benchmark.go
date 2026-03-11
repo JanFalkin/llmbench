@@ -19,7 +19,7 @@ func runBenchmark(args []string) {
 
 	var cfg config.BenchmarkConfig
 	var format string
-	fs.StringVar(&format, "format", "table", "Output format: table or json")
+	fs.StringVar(&format, "format", "table", "Output format: table, json, or csv")
 	fs.StringVar(&cfg.URL, "url", "http://localhost:11434", "Base URL of OpenAI-compatible endpoint")
 	fs.StringVar(&cfg.Model, "model", "", "Model name")
 	fs.StringVar(&cfg.APIKey, "api-key", "", "API key (or set LLMBENCH_API_KEY or OPENAI_API_KEY env var)")
